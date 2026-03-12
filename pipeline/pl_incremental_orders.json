@@ -84,7 +84,7 @@
 					},
 					"ifTrueActivities": [
 						{
-							"name": "copy_incremental_orders",
+							"name": "sourcetosinkcopy",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -98,17 +98,21 @@
 							"typeProperties": {
 								"source": {
 									"type": "AzureSqlSource",
-									"sqlReaderQuery": {
-										"value": "SELECT *\nFROM Orders\nWHERE last_updated > '@{activity('copycdc').output.value[0].cdc_timestamp}'",
-										"type": "Expression"
-									},
+									"sqlReaderQuery": "SELECT *\nFROM Orders\nWHERE last_updated >\n'@{activity('copycdc').output.firstRow.cdc_timestamp}'",
 									"queryTimeout": "02:00:00",
 									"partitionOption": "None"
 								},
 								"sink": {
-									"type": "AzureSqlSink",
-									"writeBehavior": "insert",
-									"sqlWriterUseTableLock": false
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"copyBehavior": "MergeFiles"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
 								},
 								"enableStaging": false,
 								"translator": {
@@ -128,7 +132,7 @@
 							],
 							"outputs": [
 								{
-									"referenceName": "ds_orders",
+									"referenceName": "ds_orders_output",
 									"type": "DatasetReference"
 								}
 							]
