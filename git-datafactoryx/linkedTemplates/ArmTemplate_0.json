@@ -158,6 +158,34 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_orders_output')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "orders_output.csv",
+						"fileSystem": "etl-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pl_incremental_orders')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -246,7 +274,7 @@
 							},
 							"ifTrueActivities": [
 								{
-									"name": "copy_incremental_orders",
+									"name": "sourcetosinkcopy",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -260,17 +288,21 @@
 									"typeProperties": {
 										"source": {
 											"type": "AzureSqlSource",
-											"sqlReaderQuery": {
-												"value": "SELECT *\nFROM Orders\nWHERE last_updated > '@{activity('copycdc').output.value[0].cdc_timestamp}'",
-												"type": "Expression"
-											},
+											"sqlReaderQuery": "SELECT *\nFROM Orders\nWHERE last_updated >\n'@{activity('copycdc').output.firstRow.cdc_timestamp}'",
 											"queryTimeout": "02:00:00",
 											"partitionOption": "None"
 										},
 										"sink": {
-											"type": "AzureSqlSink",
-											"writeBehavior": "insert",
-											"sqlWriterUseTableLock": false
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings",
+												"copyBehavior": "PreserveHierarchy"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
 										},
 										"enableStaging": false,
 										"translator": {
@@ -291,7 +323,7 @@
 									],
 									"outputs": [
 										{
-											"referenceName": "ds_orders",
+											"referenceName": "ds_orders_output",
 											"type": "DatasetReference",
 											"parameters": {}
 										}
@@ -309,7 +341,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_cdc_timestamp')]",
 				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]",
-				"[concat(variables('factoryId'), '/datasets/ds_orders')]"
+				"[concat(variables('factoryId'), '/datasets/ds_orders')]",
+				"[concat(variables('factoryId'), '/datasets/ds_orders_output')]"
 			]
 		}
 	]
