@@ -1,0 +1,9 @@
+{
+	"name": "git-datafactoryx",
+	"location": "eastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "60a9c313-c614-4931-a477-5f9c15c06e45",
+		"tenantId": "e14e73eb-5251-4388-8d67-8f9f2e2d5a46"
+	}
+}
