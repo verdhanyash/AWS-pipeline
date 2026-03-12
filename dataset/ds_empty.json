@@ -1,0 +1,21 @@
+{
+	"name": "ds_empty",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "empty.json",
+				"fileSystem": "etl-data"
+			}
+		},
+		"schema": {
+			"type": "object"
+		}
+	}
+}
